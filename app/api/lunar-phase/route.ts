@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const ryzansteinUrl = process.env.RYZANSTEIN_API_URL || "http://localhost:8000";
+    const ryzansteinUrl = process.env.RYZANSTEIN_API_URL || "http://localhost:24000";
     const response = await fetch(`${ryzansteinUrl}/negative-space/lunar-phase`);
 
     if (!response.ok) {

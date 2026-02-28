@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const ryzansteinUrl = process.env.RYZANSTEIN_API_URL || "http://localhost:8000";
+    const ryzansteinUrl = process.env.RYZANSTEIN_API_URL || "http://localhost:24000";
 
     const healthChecks = {
       app: "healthy",
@@ -21,7 +21,7 @@ export async function GET() {
     }
 
     // Check Qdrant
-    const qdrantUrl = process.env.QDRANT_URL || "http://localhost:6333";
+    const qdrantUrl = process.env.QDRANT_URL || "http://localhost:24333";
     try {
       const qdrantResponse = await fetch(`${qdrantUrl}/health`, {
         signal: AbortSignal.timeout(2000),

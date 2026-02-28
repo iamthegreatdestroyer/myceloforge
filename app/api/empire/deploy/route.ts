@@ -4,7 +4,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const ryzansteinUrl = process.env.RYZANSTEIN_API_URL || "http://localhost:8000";
+    const ryzansteinUrl = process.env.RYZANSTEIN_API_URL || "http://localhost:24000";
     const response = await fetch(`${ryzansteinUrl}/v1/chat/completions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

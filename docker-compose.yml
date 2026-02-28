@@ -2,50 +2,70 @@ version: "3.8"
 services:
   ryzanstein:
     build: ./backend/ryzanstein
-    ports: ["8000:8000"]
+    ports: ["24000:8000"]
     volumes: ["./backend/ryzanstein/models:/app/models"]
     environment:
       - SERVICE_NAME=ryzanstein
+    networks:
+      - myceloforge-net
 
   negative-space:
     build: ./backend/negative-space
-    ports: ["8001:8001"]
+    ports: ["24001:8001"]
     environment:
       - SERVICE_NAME=negative-space
+    networks:
+      - myceloforge-net
 
   qhss:
     build: ./backend/qhss
-    ports: ["8002:8002"]
+    ports: ["24002:8002"]
     environment:
       - SERVICE_NAME=qhss
+    networks:
+      - myceloforge-net
 
   nexuszero:
     build: ./backend/nexuszero
-    ports: ["8003:8003"]
+    ports: ["24003:8003"]
     depends_on:
       - ryzanstein
       - negative-space
       - qhss
     environment:
       - SERVICE_NAME=nexuszero
+    networks:
+      - myceloforge-net
 
   doppelganger:
     build: ./backend/doppelganger
-    ports: ["8004:8004"]
+    ports: ["24004:8004"]
     environment:
       - SERVICE_NAME=doppelganger
+    networks:
+      - myceloforge-net
 
   elite-agents:
     build: ./backend/elite-agents
-    ports: ["8005:8005"]
+    ports: ["24005:8005"]
     environment:
       - SERVICE_NAME=elite-agents
+    networks:
+      - myceloforge-net
 
   qdrant:
     image: qdrant/qdrant:latest
-    ports: ["6333:6333"]
+    ports: ["24333:6333"]
     volumes:
       - qdrant-storage:/qdrant/storage
+    environment:
+      - QDRANT_API_KEY=${QDRANT_API_KEY:-}
+    networks:
+      - myceloforge-net
 
 volumes:
   qdrant-storage:
+
+networks:
+  myceloforge-net:
+    driver: bridge
