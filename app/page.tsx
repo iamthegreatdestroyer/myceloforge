@@ -14,37 +14,48 @@ export default function MyceloForge() {
   const [empires, setEmpires] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:8000/negative-space/lunar-phase")
+    fetch("/api/lunar-phase")
       .then((r) => r.json())
-      .then((d) => setPhase(d.phase || "Waxing Gibbous"));
+      .then((d) => setPhase(d.phase || "Waxing Gibbous"))
+      .catch((e) => {
+        console.error("Failed to fetch lunar phase:", e);
+        setPhase("Waxing Gibbous");
+      });
   }, []);
 
   const deployEmpire = async () => {
     setForging(true);
-    const res = await fetch("http://localhost:8000/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "ryzanstein-bitnet-7b",
-        messages: [
-          {
-            role: "user",
-            content: `Lunar MyceloForge seed: ${seed}. Current Moon: ${phase}. Use QHSS collapsed states, Negative_Space void mining, sigma-index for novelty, spawn DOPPELGANGER agent.`,
-          },
-        ],
-      }),
-    });
-    const data = await res.json();
+    try {
+      const res = await fetch("/api/empire/deploy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          seed: `Lunar MyceloForge seed: ${seed}. Current Moon: ${phase}. Use QHSS collapsed states, Negative_Space void mining, sigma-index for novelty, spawn DOPPELGANGER agent.`,
+        }),
+      });
 
-    const newEmpire = {
-      name: data.choices[0].message.content.split("\n")[0].replace("**", ""),
-      value: "$12.8M projected Year 1",
-      nft: "solana://zk-minted-via-nexuszero",
-      agent: "DOPPELGANGER LIVE — posting on @9shortlives",
-      viz: "🌕🧬🕳️",
-    };
-    setEmpires((prev) => [...prev, newEmpire]);
-    setForging(false);
+      if (!res.ok) {
+        const errorData = await res.json();
+        alert(`Error: ${errorData.error || "Failed to deploy empire"}`);
+        setForging(false);
+        return;
+      }
+
+      const data = await res.json();
+      const newEmpire = {
+        name: data.choices[0].message.content.split("\n")[0].replace("**", ""),
+        value: "$12.8M projected Year 1",
+        nft: "solana://zk-minted-via-nexuszero",
+        agent: "DOPPELGANGER LIVE — posting on @9shortlives",
+        viz: "🌕🧬🕳️",
+      };
+      setEmpires((prev) => [...prev, newEmpire]);
+    } catch (error) {
+      console.error("Empire deployment error:", error);
+      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally {
+      setForging(false);
+    }
   };
 
   return (
