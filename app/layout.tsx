@@ -12,6 +12,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { ClientAuthWrapper } from "@/components/ClientAuthWrapper";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -20,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="antialiased bg-black text-white min-h-screen">
-        {children}
+        <ClientAuthWrapper>{children}</ClientAuthWrapper>
       </body>
     </html>
   );

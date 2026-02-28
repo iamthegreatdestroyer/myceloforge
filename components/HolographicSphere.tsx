@@ -130,11 +130,12 @@ export default function HolographicSphere({
 
     window.addEventListener("resize", handleResize);
 
+    const currentContainer = containerRef.current;
     return () => {
       window.removeEventListener("resize", handleResize);
       cancelAnimationFrame(animationId);
       renderer.dispose();
-      containerRef.current?.removeChild(renderer.domElement);
+      currentContainer?.removeChild(renderer.domElement);
     };
   }, [isDeploying]);
 
