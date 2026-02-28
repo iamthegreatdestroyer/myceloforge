@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  ryzanstein:
+    build: ./backend/ryzanstein
+    ports: ["8000:8000"]
+    volumes: ["./backend/ryzanstein/models:/app/models"]
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports: ["6333:6333"]
