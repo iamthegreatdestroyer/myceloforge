@@ -63,8 +63,59 @@ services:
     networks:
       - myceloforge-net
 
+  # Phase 10: Observability & Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    ports: ["24400:9090"]
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/prometheus-rules.yml:/etc/prometheus/rules/prometheus-rules.yml
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    networks:
+      - myceloforge-net
+    depends_on:
+      - ryzanstein
+      - negative-space
+      - qhss
+      - nexuszero
+      - doppelganger
+      - elite-agents
+
+  grafana:
+    image: grafana/grafana:latest
+    ports: ["24401:3000"]
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=myceloforge-admin
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - myceloforge-net
+    depends_on:
+      - prometheus
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "24402:16686"  # Jaeger UI
+      - "6831:6831/udp"  # Jaeger agent
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+    networks:
+      - myceloforge-net
+
 volumes:
   qdrant-storage:
+  prometheus-data:
+  grafana-storage:
 
 networks:
   myceloforge-net:

@@ -1,0 +1,162 @@
+# Prometheus alert rules for MYCELOFORGE
+# Critical alerts for production monitoring
+
+groups:
+  - name: myceloforge_service_health
+    interval: 30s
+    rules:
+      # Service down alert
+      - alert: ServiceDown
+        expr: up{job=~"ryzanstein|negative-space|qhss|nexuszero|doppelganger|elite-agents|qdrant"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} service is down"
+          description: "{{ $labels.job }} has been unavailable for more than 1 minute"
+          action: "Check service logs: kubectl logs -f deployment/{{ $labels.job }}"
+
+      # High error rate alert
+      - alert: HighErrorRate
+        expr: |
+          (sum(rate(http_requests_total{status=~"5.."}[5m])) by (job) /
+           sum(rate(http_requests_total[5m])) by (job)) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "High error rate on {{ $labels.job }}"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 1%)"
+          action: "Check service health and logs"
+
+      # High latency alert
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "High latency on {{ $labels.job }}"
+          description: "p99 latency is {{ $value }}s (threshold: 200ms)"
+          action: "Check database and service performance"
+
+      # Database connection pool exhaustion
+      - alert: DBConnectionPoolExhaustion
+        expr: db_connections_active / db_connections_max > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "Active connections: {{ $value | humanizePercentage }} of max"
+          action: "Scale database or investigate connection leaks"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: container_memory_usage_bytes / container_spec_memory_limit_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          pod: "{{ $labels.pod_name }}"
+        annotations:
+          summary: "High memory usage on {{ $labels.pod_name }}"
+          description: "Memory usage: {{ $value | humanizePercentage }}"
+          action: "Check for memory leaks or increase memory limits"
+
+      # Disk space running low
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 10m
+        labels:
+          severity: warning
+          device: "{{ $labels.device }}"
+        annotations:
+          summary: "Disk space low on {{ $labels.instance }}"
+          description: "Available space: {{ $value | humanizePercentage }}"
+          action: "Clean up logs or increase disk space"
+
+  - name: myceloforge_business_metrics
+    interval: 30s
+    rules:
+      # Empire deployment failure rate
+      - alert: EmpireDeploymentFailureRate
+        expr: |
+          (sum(rate(empire_deployments_total{status="failure"}[5m])) /
+           sum(rate(empire_deployments_total[5m]))) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High empire deployment failure rate"
+          description: "Failure rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+          action: "Investigate LLM service health and model inference"
+
+      # No active users (unusual)
+      - alert: NoActiveUsers
+        expr: active_users_current == 0
+        for: 30m
+        labels:
+          severity: info
+        annotations:
+          summary: "No active users detected"
+          description: "No user activity detected for 30 minutes"
+          action: "Check if this is expected maintenance window"
+
+      # Empire deployment latency
+      - alert: SlowEmpireDeployment
+        expr: |
+          histogram_quantile(0.95, rate(empire_deployment_duration_seconds_bucket[5m])) > 5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Empire deployments are slow"
+          description: "p95 deployment time: {{ $value }}s (threshold: 5s)"
+          action: "Check LLM service performance and resource availability"
+
+  - name: myceloforge_sla_compliance
+    interval: 1m
+    rules:
+      # SLA: Uptime > 99.9%
+      - alert: SLAUptimeViolation
+        expr: |
+          avg_over_time(up{job=~"ryzanstein|negative-space"}[5m]) < 0.999
+        for: 5m
+        labels:
+          severity: critical
+          sla: "99.9% uptime"
+        annotations:
+          summary: "SLA uptime violation detected"
+          description: "Service availability: {{ $value | humanizePercentage }}"
+          action: "Immediate incident response required"
+
+      # SLA: API latency p99 < 200ms
+      - alert: SLALatencyViolation
+        expr: |
+          histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) > 0.2
+        for: 5m
+        labels:
+          severity: critical
+          sla: "p99 latency < 200ms"
+        annotations:
+          summary: "SLA latency violation detected"
+          description: "p99 latency: {{ $value }}s (threshold: 200ms)"
+          action: "Investigate and resolve performance issue"
+
+      # SLA: Error rate < 0.1%
+      - alert: SLAErrorRateViolation
+        expr: |
+          (sum(rate(http_requests_total{status=~"5.."}[5m])) /
+           sum(rate(http_requests_total[5m]))) > 0.001
+        for: 5m
+        labels:
+          severity: critical
+          sla: "error rate < 0.1%"
+        annotations:
+          summary: "SLA error rate violation detected"
+          description: "Error rate: {{ $value | humanizePercentage }}"
+          action: "Immediate error investigation required"

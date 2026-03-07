@@ -1,0 +1,116 @@
+# Prometheus configuration for MYCELOFORGE
+# Metrics scraping configuration for all services
+
+global:
+  scrape_interval: 15s        # Default scrape interval
+  evaluation_interval: 15s    # Default evaluation interval
+  external_labels:
+    cluster: 'myceloforge-prod'
+    environment: 'production'
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Alert rules
+rule_files:
+  - '/etc/prometheus/rules/*.yml'
+
+scrape_configs:
+  # Ryzanstein (LLM Service)
+  - job_name: 'ryzanstein'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['localhost:24000']
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    labels:
+      service: 'ryzanstein'
+      port: '24000'
+
+  # Negative-Space (Astronomy Engine)
+  - job_name: 'negative-space'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['localhost:24001']
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    labels:
+      service: 'negative-space'
+      port: '24001'
+
+  # QHSS (Holographic Sphere)
+  - job_name: 'qhss'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['localhost:24002']
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    labels:
+      service: 'qhss'
+      port: '24002'
+
+  # NexusZero (Orchestrator)
+  - job_name: 'nexuszero'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['localhost:24003']
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    labels:
+      service: 'nexuszero'
+      port: '24003'
+
+  # Doppelganger (Creative AI)
+  - job_name: 'doppelganger'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['localhost:24004']
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    labels:
+      service: 'doppelganger'
+      port: '24004'
+
+  # Elite-Agents (Agent Management)
+  - job_name: 'elite-agents'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['localhost:24005']
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    labels:
+      service: 'elite-agents'
+      port: '24005'
+
+  # Qdrant (Vector Database)
+  - job_name: 'qdrant'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['localhost:24333']
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    labels:
+      service: 'qdrant'
+      port: '24333'
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 5s
+    scrape_timeout: 5s
+
+  # Node Exporter (if running)
+  - job_name: 'node'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['localhost:9100']
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
