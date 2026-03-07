@@ -1,0 +1,144 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ryzanstein
+  namespace: myceloforge-prod
+  labels:
+    app: ryzanstein
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: ryzanstein
+  template:
+    metadata:
+      labels:
+        app: ryzanstein
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: ryzanstein
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: ryzanstein
+        image: ghcr.io/iamthegreatdestroyer/myceloforge/ryzanstein:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        - containerPort: 6831
+          name: jaeger-udp
+          protocol: UDP
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: SERVICE_NAME
+          value: "ryzanstein"
+        - name: JAEGER_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: observability-config
+              key: jaeger-host
+        - name: SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              name: sentry-secrets
+              key: dsn
+        - name: DATABASE_URL_PROD
+          valueFrom:
+            secretKeyRef:
+              name: database-secrets
+              key: url
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: ryzanstein-config
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - ryzanstein
+              topologyKey: kubernetes.io/hostname
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ryzanstein
+  namespace: myceloforge-prod
+  labels:
+    app: ryzanstein
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: ryzanstein
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ryzanstein
+  namespace: myceloforge-prod
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ryzanstein
+  namespace: myceloforge-prod
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: ryzanstein
