@@ -94,11 +94,11 @@ export class MemoryCache<T> {
       const now = Date.now();
       const keysToDelete: string[] = [];
 
-      for (const [key, entry] of this.cache.entries()) {
+      Array.from(this.cache.entries()).forEach(([key, entry]) => {
         if (now > entry.expiresAt) {
           keysToDelete.push(key);
         }
-      }
+      });
 
       keysToDelete.forEach((key) => this.cache.delete(key));
     }, 60 * 1000); // Cleanup every minute
@@ -142,10 +142,10 @@ export class CacheKeyBuilder {
 /**
  * Global cache instances
  */
-export const empireCache = new MemoryCache<Record<string, any>>(10 * 60 * 1000); // 10 min
-export const lunarPhaseCache = new MemoryCache<Record<string, any>>(60 * 60 * 1000); // 1 hour
-export const userCache = new MemoryCache<Record<string, any>>(30 * 60 * 1000); // 30 min
-export const searchCache = new MemoryCache<any[]>(5 * 60 * 1000); // 5 min
+export const empireCache = new MemoryCache<Record<string, unknown>>(10 * 60 * 1000); // 10 min
+export const lunarPhaseCache = new MemoryCache<Record<string, unknown>>(60 * 60 * 1000); // 1 hour
+export const userCache = new MemoryCache<Record<string, unknown>>(30 * 60 * 1000); // 30 min
+export const searchCache = new MemoryCache<unknown[]>(5 * 60 * 1000); // 5 min
 
 /**
  * Cache decorator for async functions
@@ -155,10 +155,10 @@ export function withCache<T>(
   keyBuilder: () => string,
   ttl?: number
 ) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function (_target: unknown, _propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       const cacheKey = keyBuilder();
       const cached = cache.get(cacheKey);
 
@@ -179,8 +179,11 @@ export function withCache<T>(
 /**
  * Cache invalidation helper
  */
-export function invalidateCache(cache: MemoryCache<any>, pattern: string): number {
-  // For simple implementation, return 0
-  // In production, would need key enumeration
+export function invalidateCache(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _cache: MemoryCache<unknown>,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _pattern: string
+): number {
   return 0;
 }

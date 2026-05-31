@@ -11,7 +11,7 @@ export interface PerformanceMetrics {
   cls?: number; // Cumulative Layout Shift
   fcp?: number; // First Contentful Paint
   ttfb?: number; // Time to First Byte
-  navigationTiming?: PerformanceNavigationTiming;
+  navigationTiming?: { domContentLoaded?: number; loadComplete?: number };
 }
 
 /**
@@ -56,12 +56,13 @@ function monitorLCP(): void {
       const lastEntry = entries[entries.length - 1];
 
       if (lastEntry) {
-        const lcpTime = lastEntry.renderTime || lastEntry.loadTime;
+        const lcpEntry = lastEntry as PerformanceEntry & { renderTime?: number; loadTime?: number };
+        const lcpTime = lcpEntry.renderTime || lcpEntry.loadTime || 0;
 
         logger.info('LCP metric recorded', {
           lcp: lcpTime,
-          element: (lastEntry as any).element?.tagName,
-          url: (lastEntry as any).url,
+          element: (lastEntry as PerformanceEntry & { element?: Element; url?: string }).element?.tagName,
+          url: (lastEntry as PerformanceEntry & { element?: Element; url?: string }).url,
         });
 
         // Send to analytics
@@ -89,7 +90,7 @@ function monitorInputDelay(): void {
     // Try FID first (for older browsers), then fall back to INP
     const inputObserver = new PerformanceObserver((entryList) => {
       entryList.getEntries().forEach((entry) => {
-        const inputDelay = entry.processingDuration;
+        const inputDelay = (entry as PerformanceEntry & { processingDuration?: number }).processingDuration ?? 0;
 
         logger.info('Input delay metric recorded', {
           inputDelay,
@@ -137,12 +138,12 @@ function monitorCLS(): void {
     const cls = new PerformanceObserver((entryList) => {
       entryList.getEntries().forEach((entry) => {
         // Only count layout shifts without user input
-        if (!(entry as any).hadRecentInput) {
-          clsValue += (entry as any).value;
+        if (!(entry as PerformanceEntry & { hadRecentInput?: boolean; value?: number }).hadRecentInput) {
+          clsValue += (entry as PerformanceEntry & { hadRecentInput?: boolean; value?: number }).value ?? 0;
 
           logger.info('CLS metric recorded', {
             cls: clsValue,
-            shift: (entry as any).value,
+            shift: (entry as PerformanceEntry & { value?: number }).value,
           });
 
           // Send to analytics
@@ -244,14 +245,13 @@ export function getPerformanceSummary(): PerformanceMetrics {
 
   try {
     const timing = performance.timing;
-    const navigation = performance.navigation;
 
     return {
       ttfb: timing.responseStart - timing.fetchStart,
       navigationTiming: {
         domContentLoaded: timing.domContentLoadedEventEnd - timing.domContentLoadedEventStart,
         loadComplete: timing.loadEventEnd - timing.loadEventStart,
-      } as any,
+      },
     };
   } catch (error) {
     console.error('Failed to get performance summary:', error);
@@ -270,8 +270,8 @@ Performance Report
 ==================
 TTFB: ${metrics.ttfb}ms
 Navigation Timing:
-  - DOM Content Loaded: ${(metrics.navigationTiming as any)?.domContentLoaded}ms
-  - Load Complete: ${(metrics.navigationTiming as any)?.loadComplete}ms
+  - DOM Content Loaded: ${metrics.navigationTiming?.domContentLoaded}ms
+  - Load Complete: ${metrics.navigationTiming?.loadComplete}ms
 
 Core Web Vitals Targets:
   - LCP: < 2500ms

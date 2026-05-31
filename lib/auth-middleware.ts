@@ -3,7 +3,7 @@
  * Implements broken access control prevention and verified ownership checks
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 /**
