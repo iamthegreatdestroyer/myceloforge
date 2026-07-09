@@ -10,6 +10,7 @@ const config: Config = {
   testEnvironment: "jsdom",
   roots: ["<rootDir>"],
   testMatch: ["**/__tests__/**/*.ts?(x)", "**/?(*.)+(spec|test).ts?(x)"],
+  testPathIgnorePatterns: ["<rootDir>/node_modules/", "<rootDir>/.next/", "<rootDir>/e2e/"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
