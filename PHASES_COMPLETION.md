@@ -47,7 +47,7 @@
 ### 🔌 Integration Points
 - Supabase authentication (email/password, OAuth ready)
 - Solana wallet connection (Phantom wallet adapter)
-- Stripe payment checkout (client-side + backend)
+- Stripe payment checkout (client-side + backend) — scaffolding/stub, not production (see Phase 6)
 - Qdrant vector search (semantic empire discovery)
 - Custom API layer for all backend services
 
@@ -105,11 +105,11 @@
 ## API Layer
 
 ### 🔌 Frontend API Routes (Next.js)
-- `POST /api/empire/deploy` — Proxy to Ryzanstein
+- `POST /api/empire/deploy` — Proxy to Ryzanstein LLM (`ryzanstein-bitnet-7b`); backend is a stub, not production
 - `GET /api/lunar-phase` — Proxy to Negative-Space
 - `GET /api/health` — System health aggregation
-- `POST /api/stripe/checkout` — Stripe checkout session
-- `POST /api/stripe/webhook` — Payment webhook handler
+- `POST /api/stripe/checkout` — Stripe checkout session (stub: returns a fabricated `cs_test_...` session)
+- `POST /api/stripe/webhook` — Payment webhook handler (stub: signature NOT verified)
 
 ### ✅ Error Handling
 - Try/catch blocks on all routes
@@ -329,7 +329,9 @@ QDRANT_API_KEY=...
 ✅ **Modern Tech Stack:** Next.js 14, React 18, Three.js, Framer Motion
 ✅ **CI/CD Pipeline:** GitHub Actions + pre-commit hooks
 ✅ **Comprehensive Testing:** Unit + E2E + component tests
-✅ **Authentication:** Supabase + Solana wallet + Stripe
+✅ **Authentication:** Supabase + Solana wallet
+⚠️ **Payments:** Stripe is scaffolding/stub only — stub checkout session + unverified webhook signature; NOT production
+⚠️ **LLM backend:** Ryzanstein `ryzanstein-bitnet-7b` model deployment is a stub, NOT production
 ✅ **API Layer:** Error handling, proxies, health checks
 ✅ **Data Integration:** Supabase + Qdrant ready
 ✅ **Documentation:** Comprehensive comments and README
