@@ -18,7 +18,7 @@
 | 3 | API Layer & Error Handling | ✅ | 1-2h | 1 |
 | 4 | UI Enhancement & Animation | ✅ | 2-3h | 1 |
 | 5 | Data Layer | ✅ | 2-3h | 1 |
-| 6 | Authentication & Payments | ✅ | 3-4h | 1 |
+| 6 | Authentication & Payments | ⚠️ | 3-4h | 1 |
 | 7 | CI/CD Pipeline | ✅ | 1-2h | 1 |
 | 8 | Backend Service Expansion | ✅ | 4-8h | 1 |
 | 9 | Testing & Quality | ✅ | 3-4h | 1 |
@@ -129,12 +129,14 @@
 - Protected routes middleware ready
 - Lazy initialization (build-safe)
 
-### 💳 Stripe Integration
+### 💳 Stripe Integration ⚠️ Partial / stub
 - Publishable key in frontend
 - Secret key in backend environment
-- Checkout session creation stub
-- Webhook handler for payment confirmation
+- Checkout session creation stub — `POST /api/stripe/checkout` returns a fabricated `cs_test_...` sessionId ("Checkout session created (stub)"); it does not create a real Stripe checkout session
+- Webhook handler present but signature is NOT verified — `POST /api/stripe/webhook` accepts all webhooks without checking `STRIPE_WEBHOOK_SECRET` (marked TODO in code); not safe for production
 - Test mode ready
+
+> **Note:** Phase 6 payments are intentionally a development stub, consistent with the 75% Production Readiness figure above. Real Stripe integration (live checkout session creation + webhook signature verification) is still required before production.
 
 ### 🔗 Solana Wallet
 - Phantom wallet connection
